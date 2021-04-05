@@ -2,8 +2,8 @@
 
 #define VGA_HEIGHT 240
 #define VGA_WIDTH 320
-#define VGA_WIDTH_BINS 6
-#define VGA_HEIGHT_BINS 16
+#define VGA_WIDTH_BINS 8
+#define VGA_HEIGHT_BINS 8
 
 typedef struct {
     int red;
@@ -11,7 +11,7 @@ typedef struct {
     int blue;
 } colour_t;
 
-volatile static short const vga_buffer = (short*)FPGA_PIXEL_BUF_BASE;
+volatile static short* const vga_buffer = (short*)FPGA_PIXEL_BUF_BASE;
 
 static colour_t const BLACK = { 0, 0, 0 };
 static colour_t const RED = { 31, 0, 0 };
@@ -24,15 +24,16 @@ static colour_t const YELLOW = { 31, 63, 0 };
 static colour_t const ORANGE = { 31, 32, 0 };
 
 static colour_t colour_buffer[VGA_WIDTH_BINS*VGA_HEIGHT_BINS];
+static int vga_segment_selection = 0, vga_previous_segment_selection = 0;
 
 void vga_set_screen(colour_t colour);
 
 void vga_init() {
     vga_set_screen(BLACK);
-    const colour_t colours[] = { RED, GREEN, BLUE, PURPLE, TURQUOISE, ORANGE, WHITE, YELLOW };
+    const colour_t colours[] = { RED, BLUE, PURPLE, TURQUOISE, ORANGE, WHITE, YELLOW };
     int i;
     for(i = 0; i < VGA_WIDTH_BINS*VGA_HEIGHT_BINS; i++) {
-        colour_buffer[i] = colours[i%8];
+        colour_buffer[i] = colours[i%7];
     }
 }
 
@@ -73,7 +74,12 @@ void vga_show_screen() {
     for(segment = 0; segment < VGA_WIDTH_BINS*VGA_HEIGHT_BINS; segment++) {
         for(x = x_start; x < x_end; x++) {
             for(y = y_start; y < y_end; y++) {
-                vga_set_pixel(x,y,colour_buffer[segment]);
+                if(segment == vga_segment_selection && (x == x_start || x == (x_end-1) || y == y_start || y == (y_end-1))) {
+                    vga_set_pixel(x,y,GREEN);
+                }
+                else {
+                    vga_set_pixel(x,y,colour_buffer[segment]);
+                }
             }
         }
         if(segment != 0 && (segment+1)%VGA_WIDTH_BINS == 0) {
@@ -87,4 +93,40 @@ void vga_show_screen() {
             x_end = x_start + bin_width_size;
         }
     }
+}
+
+void vga_draw_segment(int segment) {
+    const int bin_width_size = VGA_WIDTH/VGA_WIDTH_BINS;
+    const int bin_height_size = VGA_HEIGHT/VGA_HEIGHT_BINS;
+    int x, y;
+    int x_start = (segment%VGA_WIDTH_BINS)*bin_width_size, x_end = x_start + bin_width_size;
+    int y_start = (segment/VGA_WIDTH_BINS)*bin_height_size, y_end = y_start + bin_height_size;
+    for(x = x_start; x < x_end; x++) {
+        for(y = y_start; y < y_end; y++) {
+            if(segment == vga_segment_selection && (x == x_start || x == (x_end-1) || y == y_start || y == (y_end-1))) {
+                vga_set_pixel(x,y,GREEN);
+            }
+            else {
+                vga_set_pixel(x,y,colour_buffer[segment]);
+            }
+        }
+    }
+}
+
+void vga_increment_selection() {
+    vga_previous_segment_selection = vga_segment_selection;
+    if(vga_segment_selection != VGA_WIDTH_BINS*VGA_HEIGHT_BINS - 1) vga_segment_selection++;
+    vga_draw_segment(vga_previous_segment_selection);
+    vga_draw_segment(vga_segment_selection);
+}
+
+void vga_decrement_selection() {
+    vga_previous_segment_selection = vga_segment_selection;
+    if(vga_segment_selection != 0) vga_segment_selection--;
+    vga_draw_segment(vga_previous_segment_selection);
+    vga_draw_segment(vga_segment_selection);
+}
+
+void vga_set_segment(int segment, colour_t colour) {
+    colour_buffer[segment] = colour;
 }
