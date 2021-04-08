@@ -7,9 +7,9 @@
 #define VGA_WIDTH_BINS 8
 #define VGA_HEIGHT_BINS 8
 
-#define VGA_MAX_BLUE  31
-#define VGA_MAX_GREEN 63
 #define VGA_MAX_RED   31
+#define VGA_MAX_GREEN 63
+#define VGA_MAX_BLUE  31
 
 typedef struct {
     int red;
@@ -83,7 +83,8 @@ void vga_show_screen() {
         for(x = x_start; x < x_end; x++) {
             for(y = y_start; y < y_end; y++) {
                 if(segment == vga_segment_selection && (x == x_start || x == (x_end-1) || y == y_start || y == (y_end-1))) {
-                    vga_set_pixel(x,y,GREEN);
+                    colour_t col = { VGA_MAX_RED - colour_buffer[segment].red, VGA_MAX_GREEN - colour_buffer[segment].green, VGA_MAX_BLUE - colour_buffer[segment].blue };
+                    vga_set_pixel(x,y,col);
                 }
                 else {
                     vga_set_pixel(x,y,colour_buffer[segment]);
@@ -112,7 +113,8 @@ void vga_draw_segment(int segment) {
     for(x = x_start; x < x_end; x++) {
         for(y = y_start; y < y_end; y++) {
             if(segment == vga_segment_selection && (x == x_start || x == (x_end-1) || y == y_start || y == (y_end-1))) {
-                vga_set_pixel(x,y,GREEN);
+                colour_t col = { VGA_MAX_RED - colour_buffer[segment].red, VGA_MAX_GREEN - colour_buffer[segment].green, VGA_MAX_BLUE - colour_buffer[segment].blue };
+                vga_set_pixel(x,y,col);
             }
             else {
                 vga_set_pixel(x,y,colour_buffer[segment]);
