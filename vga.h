@@ -1,9 +1,15 @@
+#pragma once
+
 #include "address_map_arm.h"
 
 #define VGA_HEIGHT 240
 #define VGA_WIDTH 320
 #define VGA_WIDTH_BINS 8
 #define VGA_HEIGHT_BINS 8
+
+#define VGA_MAX_BLUE  31
+#define VGA_MAX_GREEN 63
+#define VGA_MAX_RED   31
 
 typedef struct {
     int red;
@@ -27,6 +33,8 @@ static colour_t colour_buffer[VGA_WIDTH_BINS*VGA_HEIGHT_BINS];
 static int vga_segment_selection = 0, vga_previous_segment_selection = 0;
 
 void vga_set_screen(colour_t colour);
+void vga_set_current_segment(colour_t colour);
+void vga_draw_current_segment();
 
 void vga_init() {
     vga_set_screen(BLACK);
@@ -129,4 +137,12 @@ void vga_decrement_selection() {
 
 void vga_set_segment(int segment, colour_t colour) {
     colour_buffer[segment] = colour;
+}
+
+void vga_set_current_segment(colour_t colour) {
+    vga_set_segment(vga_segment_selection, colour);
+}
+
+void vga_draw_current_segment() {
+    vga_draw_segment(vga_segment_selection);
 }

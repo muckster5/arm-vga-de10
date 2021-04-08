@@ -1,9 +1,9 @@
 #include "address_map_arm.h"
 #include "vga.h"
+#include "jtag.h"
 #include "interrupts.h"
 
 int main(void) {
-    //disable_A9_interrupts();
     set_A9_IRQ_stack();
     config_GIC();
     config_KEYs();
@@ -15,11 +15,23 @@ int main(void) {
     for(i = 0; i < VGA_WIDTH_BINS*VGA_HEIGHT_BINS; i++) {
         vga_set_segment(i, RED);
     }
-    
-
-    while(1){
-        ;
+    jtag_start_request();
+    while(1) {
+        if(carworld.data_ready == 1) {
+            colour_t col;
+            struct _carworld* data = get_carworld_data();
+            carworld_to_colour(data, &col);
+            jtag_start_request();
+            vga_set_current_segment(col);
+            vga_draw_current_segment();
+            // use the following functions to either increment to the next segment
+            // or decrement to the previous segment
+            // Note: they will handle overflows by just remaining at the first or last segment
+            // vga_increment_selection()
+            // vga_decrement_selection()
+        }
+        else {
+            jtag_read_fifo();
+        }
     }
-
-    return 0;
 }
