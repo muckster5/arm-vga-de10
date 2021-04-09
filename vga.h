@@ -35,6 +35,7 @@ static int vga_segment_selection = 0, vga_previous_segment_selection = 0;
 void vga_set_screen(colour_t colour);
 void vga_set_current_segment(colour_t colour);
 void vga_draw_current_segment();
+void vga_draw_segment(int segment);
 
 void vga_init() {
     vga_set_screen(BLACK);
@@ -74,33 +75,9 @@ void vga_set_screen(colour_t colour) {
 }
 
 void vga_show_screen() {
-    const int bin_width_size = VGA_WIDTH/VGA_WIDTH_BINS;
-    const int bin_height_size = VGA_HEIGHT/VGA_HEIGHT_BINS;
-    int segment, x, y;
-    int x_start = 0, x_end = bin_width_size;
-    int y_start = 0, y_end = bin_height_size;
+    int segment;
     for(segment = 0; segment < VGA_WIDTH_BINS*VGA_HEIGHT_BINS; segment++) {
-        for(x = x_start; x < x_end; x++) {
-            for(y = y_start; y < y_end; y++) {
-                if(segment == vga_segment_selection && (x == x_start || x == (x_end-1) || y == y_start || y == (y_end-1))) {
-                    colour_t col = { VGA_MAX_RED - colour_buffer[segment].red, VGA_MAX_GREEN - colour_buffer[segment].green, VGA_MAX_BLUE - colour_buffer[segment].blue };
-                    vga_set_pixel(x,y,col);
-                }
-                else {
-                    vga_set_pixel(x,y,colour_buffer[segment]);
-                }
-            }
-        }
-        if(segment != 0 && (segment+1)%VGA_WIDTH_BINS == 0) {
-            y_start += bin_height_size;
-            y_end = y_start + bin_height_size;
-            x_start = 0;
-            x_end = bin_width_size;
-        }
-        else {
-            x_start += bin_width_size;
-            x_end = x_start + bin_width_size;
-        }
+        vga_draw_segment(segment);
     }
 }
 
