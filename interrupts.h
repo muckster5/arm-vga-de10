@@ -3,6 +3,8 @@
 #include "address_map_arm.h"
 #include "vga.h"
 
+static volatile int is_editing;
+
 void disable_A9_interrupts(void);
 void config_KEYs(void);
 void config_GIC(void);
@@ -170,10 +172,16 @@ void pushbutton_ISR( void )
 	}
 	else if (press & 0x2) {      // KEY1
 		HEX_bits = 0b00000110;
-		vga_decrement_selection();
+		if(is_editing == 1) {
+			is_editing = 0;
+		}
+		else {
+			is_editing = 1;
+		}
 	}
 	else if (press & 0x4) {      // KEY2
 		HEX_bits = 0b01011011;
+		vga_decrement_selection();
 	}
 	else {                       // press & 0x8, which is KEY3
 		HEX_bits = 0b01001111;

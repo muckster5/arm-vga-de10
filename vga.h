@@ -4,8 +4,8 @@
 
 #define VGA_HEIGHT 240
 #define VGA_WIDTH 320
-#define VGA_WIDTH_BINS 8
-#define VGA_HEIGHT_BINS 8
+#define VGA_WIDTH_BINS 4
+#define VGA_HEIGHT_BINS 2
 
 #define VGA_MAX_RED   31
 #define VGA_MAX_GREEN 63
@@ -28,22 +28,21 @@ static colour_t const TURQUOISE = { 0, 63, 31 };
 static colour_t const WHITE = { 31, 63, 31 };
 static colour_t const YELLOW = { 31, 63, 0 };
 static colour_t const ORANGE = { 31, 32, 0 };
+static colour_t const GREY = { 10, 20, 10 };
 
 static colour_t colour_buffer[VGA_WIDTH_BINS*VGA_HEIGHT_BINS];
 static int vga_segment_selection = 0, vga_previous_segment_selection = 0;
+static int border_thickness = 5;
 
 void vga_set_screen(colour_t colour);
 void vga_set_current_segment(colour_t colour);
 void vga_draw_current_segment();
 void vga_draw_segment(int segment);
+colour_t get_inverted_colour(colour_t colour);
+void vga_set_border_thickness(int thickness);
 
 void vga_init() {
     vga_set_screen(BLACK);
-    const colour_t colours[] = { RED, BLUE, PURPLE, TURQUOISE, ORANGE, WHITE, YELLOW };
-    int i;
-    for(i = 0; i < VGA_WIDTH_BINS*VGA_HEIGHT_BINS; i++) {
-        colour_buffer[i] = colours[i%7];
-    }
 }
 
 int map(int value, int from_low, int from_high, int to_low, int to_high) {
@@ -66,11 +65,9 @@ void vga_set_pixel(int x, int y, colour_t colour) {
 }
 
 void vga_set_screen(colour_t colour) {
-    int i, j;
-    for(i = 0; i < VGA_WIDTH; i++) {
-        for(j = 0; j < VGA_HEIGHT; j++) {
-            vga_set_pixel(i, j, colour);
-        }
+    int i;
+    for(i = 0; i < VGA_WIDTH_BINS*VGA_HEIGHT_BINS; i++) {
+        colour_buffer[i] = colour;
     }
 }
 
@@ -81,6 +78,11 @@ void vga_show_screen() {
     }
 }
 
+colour_t get_inverted_colour(colour_t colour) {
+    colour_t inverted = { VGA_MAX_RED - colour.red, VGA_MAX_GREEN - colour.green, VGA_MAX_BLUE - colour.blue };
+    return inverted;
+}
+
 void vga_draw_segment(int segment) {
     const int bin_width_size = VGA_WIDTH/VGA_WIDTH_BINS;
     const int bin_height_size = VGA_HEIGHT/VGA_HEIGHT_BINS;
@@ -89,9 +91,8 @@ void vga_draw_segment(int segment) {
     int y_start = (segment/VGA_WIDTH_BINS)*bin_height_size, y_end = y_start + bin_height_size;
     for(x = x_start; x < x_end; x++) {
         for(y = y_start; y < y_end; y++) {
-            if(segment == vga_segment_selection && (x == x_start || x == (x_end-1) || y == y_start || y == (y_end-1))) {
-                colour_t col = { VGA_MAX_RED - colour_buffer[segment].red, VGA_MAX_GREEN - colour_buffer[segment].green, VGA_MAX_BLUE - colour_buffer[segment].blue };
-                vga_set_pixel(x,y,col);
+            if(segment == vga_segment_selection && (x - x_start <= (border_thickness-1) || (x_end-1)-x <= (border_thickness-1) || y - y_start <= (border_thickness-1) || (y_end-1)-y <= (border_thickness-1))) {
+                vga_set_pixel(x,y,get_inverted_colour(colour_buffer[segment]));
             }
             else {
                 vga_set_pixel(x,y,colour_buffer[segment]);
@@ -124,4 +125,8 @@ void vga_set_current_segment(colour_t colour) {
 
 void vga_draw_current_segment() {
     vga_draw_segment(vga_segment_selection);
+}
+
+void vga_set_border_thickness(int thickness) {
+    border_thickness = thickness;
 }
