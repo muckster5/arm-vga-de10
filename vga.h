@@ -123,6 +123,10 @@ void vga_set_current_segment(colour_t colour) {
     vga_set_segment(vga_segment_selection, colour);
 }
 
+colour_t vga_get_current_segment() {
+    return colour_buffer[vga_segment_selection];
+}
+
 void vga_draw_current_segment() {
     vga_draw_segment(vga_segment_selection);
 }
