@@ -6,7 +6,7 @@ The following code is part of the ECE 3375B final deliverable at the University 
 Note on push buttons in the simulator: the buttons have to be manually pressed **and** depressed in order to function properly so make sure to "double click" when using the push buttons.
 
 ## Getting Started
-1. Downloading [the most recent]() version of the colour selector.
+1. Downloading [the most recent](https://github.com/jeffstjean/arm-vga-de10/releases/latest/download/main.axf) version of the colour selector.
 2. Open [the simulator](https://cpulator.01xz.net/?sys=arm-de1soc).
 3. Select File > Load.
 4. Select the ELF executable that was downloaded in step one (main.axf)
