@@ -1,4 +1,4 @@
-*.axf
-*.o
-*.objdump
-*.srec
+.axf
+.o
+.objdump
+.srec
